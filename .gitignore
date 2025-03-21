@@ -1,0 +1,30 @@
+# Ігноруємо файли конфігурації з чутливими даними
+.env
+
+# Логи та тимчасові файли
+logs/
+*.log
+*.out
+*.err
+
+# Файли кешу та артефакти Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Віртуальне середовище
+venv/
+env/
+
+# IDE та редактори (VS Code, PyCharm тощо)
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# База даних Redis (якщо зберігається локально)
+dump.rdb
+
+# Docker (якщо плануєш використовувати)
+docker-compose.override.yml
