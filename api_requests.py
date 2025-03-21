@@ -60,7 +60,7 @@ def get_dex_prices(token_addresses):
                 # Пошук назви токена за контрактом з config.TOKENS
                 for token, token_contract in TOKENS.items():
                     if token_contract.lower() == contract.lower():
-                        prices[token] = {"price": float(price), "token": token, "url" : url}
+                        prices[token] = {"price": float(price), "token": token, "url" : url, "contract" : contract}
 
         return prices
     except requests.RequestException as e:

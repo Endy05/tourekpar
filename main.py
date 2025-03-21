@@ -7,11 +7,6 @@ from logger import log_info, log_spread_alert, log_to_file, log_error, log_info_
 from telegram_bot import send_telegram_alert
 from config import TOKENS, SPREAD_THRESHOLD, REDIS_HOST, REDIS_PORT, REDIS_DB, SPREAD_INCREMENT_THRESHOLD
 
-import asyncio
-
-if __name__ == "__main__":
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
 # Підключення до Redis
 redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, decode_responses=True)
 
@@ -57,7 +52,8 @@ def check_spreads():
             for contract, dex_info in dex_data.items():
                 token_name = dex_info['token']
                 dex_price = dex_info['price']
-                url = dex_info.get('url')  # Extracting the URL for the token from dex_data
+                url = dex_info.get('url') 
+                address = dex_info.get('contract') # Extracting the URL for the token from dex_data
                 mexc_price = mexc_data.get(token_name)
 
                 if mexc_price and dex_price:
@@ -70,7 +66,7 @@ def check_spreads():
 
                         try:
                             chain = dex_info.get('chain', 'bsc')
-                            send_telegram_alert(token_name, contract, spread, mexc_price, dex_price, chain, url)
+                            send_telegram_alert(token_name, contract, spread, mexc_price, dex_price, chain, url, address)
                             save_alert(token_name, spread)
                         except Exception as e:
                             log_error(f"Помилка Telegram для {token_name}: {e}")

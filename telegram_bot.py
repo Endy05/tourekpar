@@ -2,7 +2,7 @@ import requests
 from logger import log_error, log_info
 from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 
-def send_telegram_alert(symbol, contract, spread, mexc_price, dex_price, chain, url):
+def send_telegram_alert(symbol, contract, spread, mexc_price, dex_price, chain, url, address):
     try:
         message = f"""<b>💰 Монета:</b> {symbol}
 
@@ -14,7 +14,7 @@ def send_telegram_alert(symbol, contract, spread, mexc_price, dex_price, chain, 
 📈 <b>Ціна MEXC:</b> {mexc_price:.6f}
 📉 <b>Ціна DEX:</b> {dex_price:.6f}
 
-📝 <b>Контракт:</b> <code>{contract}</code>
+📝 <b>Контракт:</b> <code>{address}</code>
 🌐 <b>Сеть:</b> {chain}"""
 
         keyboard = {
