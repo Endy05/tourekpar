@@ -35,7 +35,11 @@ SPREAD_INCREMENT_THRESHOLD = float(os.getenv("SPREAD_INCREMENT_THRESHOLD", 1.5))
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 REDIS_DB = int(os.getenv("REDIS_DB", 0))
-REDIS_ALERT = int(os.getenv("REDIS_ALERT", 900))  # Час життя ключа в Redis (в секундах)
+# Час зберігання алертів в Redis (в секундах)
+# 900 секунд = 15 хвилин
+# Якщо потрібно змінити час зберігання, змініть це значення
+# або встановіть змінну REDIS_ALERT в .env файлі
+REDIS_ALERT = int(os.getenv("REDIS_ALERT", 120))
 
 # API URL
 MEXC_API_URL = "https://api.mexc.com/api/v3/ticker/price"
