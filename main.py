@@ -2,10 +2,11 @@ import threading
 import time
 import os
 import redis
-from api_requests import get_mexc_prices, get_dex_prices
+from dex import get_dex_prices
+from mexc_ws import get_mexc_prices
 from logger import log_info, log_spread_alert, log_to_file, log_error, log_info_spread
 from telegram_bot import send_telegram_alert
-from config import TOKENS, SPREAD_THRESHOLD, REDIS_HOST, REDIS_PORT, REDIS_DB, SPREAD_INCREMENT_THRESHOLD
+from config import TOKENS, SPREAD_THRESHOLD, REDIS_HOST, REDIS_PORT, REDIS_DB, SPREAD_INCREMENT_THRESHOLD, REDIS_ALERT
 
 # Підключення до Redis
 redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, decode_responses=True)
@@ -29,7 +30,7 @@ def is_alert_needed(token, current_spread):
 
 def save_alert(token, spread):
     """ Зберігає спред в Redis """
-    redis_client.setex(f"spread_alert:{token}", 60, spread)
+    redis_client.setex(f"spread_alert:{token}", REDIS_ALERT, spread)
 
 def check_spreads():
     while True:
@@ -39,7 +40,19 @@ def check_spreads():
         try:
             # Отримуємо ціни
             mexc_data = get_mexc_prices()
-            dex_data = get_dex_prices(list(TOKENS.values()))  # This returns a dict of prices and urls
+            dex_data = get_dex_prices(list(TOKENS.values()))
+
+            # Статистика токенів
+            total_tokens = len(TOKENS)
+            mexc_found = len(mexc_data)
+            dex_found = len([t for t in dex_data.values() if t.get('price')])
+            success_rate = (len([t for t in dex_data.values() if t.get('price') and mexc_data.get(t['token'])]) / total_tokens) * 100
+
+            log_info(f"Статистика парсингу:")
+            log_info(f"Всього токенів: {total_tokens}")
+            log_info(f"Знайдено на MEXC: {mexc_found}/{total_tokens} ({(mexc_found/total_tokens)*100:.1f}%)")
+            log_info(f"Знайдено на DEX: {dex_found}/{total_tokens} ({(dex_found/total_tokens)*100:.1f}%)")
+            log_info(f"Успішно опрацьовано: {success_rate:.1f}%")
 
             # Перевірка, чи не порожні дані
             mexc_data_status = True if mexc_data else False
@@ -58,16 +71,27 @@ def check_spreads():
 
                 if mexc_price and dex_price:
                     spread = ((mexc_price - dex_price) / dex_price) * 100
-                    log_info_spread(token_name, dex_price, mexc_price, spread)
+                    is_mexc_higher = mexc_price > dex_price
+                    display_spread = -abs(spread) if is_mexc_higher else abs(spread)
+                    log_info_spread(token_name, dex_price, mexc_price, display_spread)
 
-                    if mexc_price > dex_price and is_alert_needed(token_name, spread):
-                        log_info(f"Знайдено арбітраж для {token_name}: {spread:.2f}% (MEXC: ${mexc_price:.6f} > DEX: ${dex_price:.6f})")
+                    if abs(spread) > SPREAD_THRESHOLD and is_alert_needed(token_name, abs(spread)):
+                        log_info(f"Знайдено арбітраж для {token_name}: {display_spread:.2f}%")
                         log_spread_alert(token_name, spread, mexc_price, dex_price)
 
                         try:
-                            chain = dex_info.get('chain', 'bsc')
-                            send_telegram_alert(token_name, contract, spread, mexc_price, dex_price, chain, url, address)
-                            save_alert(token_name, spread)
+                            chain = dex_info.get('chain')
+                            send_telegram_alert(
+                                token_name, 
+                                spread, 
+                                mexc_price, 
+                                dex_price, 
+                                chain, 
+                                url, 
+                                address, 
+                                dex_info
+                            )
+                            save_alert(token_name, abs(spread))
                         except Exception as e:
                             log_error(f"Помилка Telegram для {token_name}: {e}")
                 else:
