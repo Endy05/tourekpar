@@ -21,7 +21,6 @@ TOKENS = {
     "PWEASE": {"address": "CniPCE4b3s8gSUPhUiyMjXnytrEqUrMfSsnbBjLCpump", "pairAddress": "9fmdkQipJK2teeUv53BMDXi52uRLbrEvV38K8GBNkiM7"},
     "SZN": {"address": "TDxL4V5LE6TYSFXSCWJkkSsCYbgmrDnTer", "pairAddress": "TLkhSBpYbgQ4A7nEUaC4cYXmhiZjuks9oX"},
     "GROKCOIN": {"address": "3MadWqcN9cSrULn8ikDnan9mF3znoQmBPXtVy6BfSTDB", "pairAddress": "DsktL4KrnnsupVfjb1uW4aoudgN8ooz4DtepPSAbmdN3"},
-    "TIBBIR": {"address": "0xA4A2E2ca3fBfE21aed83471D28b6f65A233C6e00", "pairAddress": "0x0c3b466104545efa096b8f944c1e524E1d0D4888"},
     "BNBCARD" : {"address": "0xDc06717F367e57A16e06CcE0c4761604460da8Fc", "pairAddress": "0x78fc96f3543337cd5393533eA66dC8fe42Ad054d"},
     "TAT" : {"address": "0x996D1b997203a024E205069a304161ba618d1c61", "pairAddress": "0x71cD938b95aD63cb724b986bD7628558A6aF5Bb1"},
 }
