@@ -2,9 +2,10 @@ import threading
 import time
 import os
 import redis
+import webbrowser  # Додаємо імпорт
 from dex import get_dex_prices
 from mexc_ws import get_mexc_prices
-from logger import log_info, log_spread_alert, log_to_file, log_error, log_info_spread
+from logger import log_info, log_spread_alert, log_error, log_info_spread
 from telegram_bot import send_telegram_alert
 from config import TOKENS, SPREAD_THRESHOLD, REDIS_HOST, REDIS_PORT, REDIS_DB, SPREAD_INCREMENT_THRESHOLD, REDIS_ALERT
 
@@ -66,8 +67,9 @@ def check_spreads():
                 token_name = dex_info['token']
                 dex_price = dex_info['price']
                 url = dex_info.get('url') 
-                address = dex_info.get('contract') # Extracting the URL for the token from dex_data
+                address = dex_info.get('contract')
                 mexc_price = mexc_data.get(token_name)
+                chain = dex_info.get('chain')
 
                 if mexc_price and dex_price:
                     spread = ((mexc_price - dex_price) / dex_price) * 100
@@ -81,13 +83,17 @@ def check_spreads():
 
                         try:
                             chain = dex_info.get('chain')
+                            dex_url = dex_info.get('url')
+                            if dex_url:
+                                webbrowser.open(dex_url)
+                            
                             send_telegram_alert(
                                 token_name, 
                                 spread, 
                                 mexc_price, 
                                 dex_price, 
                                 chain, 
-                                url, 
+                                dex_url, 
                                 address, 
                                 dex_info
                             )
@@ -95,10 +101,12 @@ def check_spreads():
                         except Exception as e:
                             log_error(f"Помилка Telegram для {token_name}: {e}")
                 else:
+                    message = ""
                     if not mexc_price:
-                        log_info(f"{token_name}: Немає ціни на MEXC")
+                        message += f"❌ {token_name}: Немає ціни на MEXC"
                     if not dex_price:
-                        log_info(f"{token_name}: Немає ціни на DEX")
+                        message += f"❌ {token_name}: Немає ціни на DEX | Chain: {chain} | Contract: {address}"
+                    log_error(message)
 
             execution_time = time.time() - start_time
             log_info(f"Цикл завершено за {execution_time:.2f} секунд")
@@ -112,13 +120,11 @@ def check_spreads():
 
 def main():
     log_info("Запуск парсера...")
-    log_to_file(os.path.join(logs_dir, "general_logs.txt"), "Запуск парсера...")
-
+    
     thread = threading.Thread(target=check_spreads, daemon=True)
     thread.start()
     
-    log_info("Потік check_spreads запущено!")  
-    log_to_file(os.path.join(logs_dir, "general_logs.txt"), "Потік check_spreads запущено!")  
+    log_info("Потік check_spreads запущено!")
 
     while True:
         time.sleep(1)
